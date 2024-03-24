@@ -49,10 +49,12 @@ type Lexer struct {
 	pos   int   // Current unscanned position in the input stream.
 	token token // Last scanned token, if token.kind != TokenUndef.
 
-	firstElement bool // Whether current element is the first in array or an object.
-	wantSep      byte // A comma or a colon character, which need to occur before a token.
+	firstElement bool   // Whether current element is the first in array or an object.
+	wantSep      byte   // A comma or a colon character, which need to occur before a token.
+	lastKey      string // last key that was observed in an object
 
 	UseMultipleErrors bool          // If we want to use multiple errors.
+	VerboseErrorsMode bool          // If we want multiple errors to contain additional information.
 	fatalError        error         // Fatal error occurred during lexing. It is usually a syntax error.
 	multipleErrors    []*LexerError // Semantic errors occurred during lexing. Marshalling will be continued after finding this errors.
 }
@@ -452,6 +454,9 @@ func (r *Lexer) errInvalidToken(expected string) {
 			Reason: fmt.Sprintf("expected %s", expected),
 			Offset: r.start,
 			Data:   string(r.Data[r.start:r.pos]),
+
+			Key:            r.lastKey,
+			IsInvalidValue: true,
 		})
 		return
 	}
@@ -625,20 +630,22 @@ func (r *Lexer) unsafeString(skipUnescape bool) (string, []byte) {
 		r.FetchToken()
 	}
 	if !r.Ok() || r.token.kind != TokenString {
+		r.lastKey = ""
 		r.errInvalidToken("string")
 		return "", nil
 	}
 	if !skipUnescape {
 		if err := r.unescapeStringToken(); err != nil {
+			r.lastKey = ""
 			r.errInvalidToken("string")
 			return "", nil
 		}
 	}
 
-	bytes := r.token.byteValue
+	result := r.token.byteValue
 	ret := bytesToStr(r.token.byteValue)
 	r.consume()
-	return ret, bytes
+	return ret, result
 }
 
 // UnsafeString returns the string value if the token is a string literal.
@@ -659,6 +666,7 @@ func (r *Lexer) UnsafeBytes() []byte {
 // UnsafeFieldName returns current member name string token
 func (r *Lexer) UnsafeFieldName(skipUnescape bool) string {
 	ret, _ := r.unsafeString(skipUnescape)
+	r.lastKey = ret
 	return ret
 }
 
@@ -1125,6 +1133,13 @@ func (r *Lexer) AddError(e error) {
 }
 
 func (r *Lexer) AddNonFatalError(e error) {
+	var le *LexerError
+	if errors.As(e, &le) {
+		le.Offset = r.start
+		r.addNonfatalError(le)
+		return
+	}
+
 	r.addNonfatalError(&LexerError{
 		Offset: r.start,
 		Data:   string(r.Data[r.start:r.pos]),
