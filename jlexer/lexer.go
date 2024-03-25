@@ -535,6 +535,11 @@ func (r *Lexer) IsString() bool {
 	return r.Ok() && r.token.kind == TokenString
 }
 
+// LastKey returns last traversed key in object
+func (r *Lexer) LastKey() string {
+	return r.lastKey
+}
+
 // Skip skips a single token.
 func (r *Lexer) Skip() {
 	if r.token.kind == TokenUndef && r.Ok() {
