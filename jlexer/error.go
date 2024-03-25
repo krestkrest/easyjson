@@ -32,7 +32,7 @@ func (l *LexerError) VerboseError() string {
 		return fmt.Sprintf("'%s' is unsupported", l.Key)
 	}
 	if l.IsInvalidValue {
-		return fmt.Sprintf("'%s' has unsupported value '%s'", l.Key, l.Data)
+		return fmt.Sprintf("'%s' has unsupported value '%s': %s", l.Key, l.Data, l.Reason)
 	}
 	return l.Error()
 }

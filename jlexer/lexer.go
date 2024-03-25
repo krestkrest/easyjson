@@ -519,6 +519,22 @@ func (r *Lexer) IsNull() bool {
 	return r.Ok() && r.token.kind == TokenNull
 }
 
+// IsNumber returns true if the next token is a number.
+func (r *Lexer) IsNumber() bool {
+	if r.token.kind == TokenUndef && r.Ok() {
+		r.FetchToken()
+	}
+	return r.Ok() && r.token.kind == TokenNumber
+}
+
+// IsString returns true if the next token is a string.
+func (r *Lexer) IsString() bool {
+	if r.token.kind == TokenUndef && r.Ok() {
+		r.FetchToken()
+	}
+	return r.Ok() && r.token.kind == TokenString
+}
+
 // Skip skips a single token.
 func (r *Lexer) Skip() {
 	if r.token.kind == TokenUndef && r.Ok() {
