@@ -347,35 +347,28 @@ func (g *Generator) genStructFieldDecoder(t reflect.Type, f reflect.StructField)
 		return err
 	}
 
-	if tags.required {
-		fmt.Fprintf(g.out, "%sSet = true\n", f.Name)
-	}
+	fmt.Fprintf(g.out, "%sSet += 1\n", f.Name)
 
 	return nil
 }
 
 func (g *Generator) genRequiredFieldSet(t reflect.Type, f reflect.StructField) {
-	tags := parseFieldTags(f)
-
-	if !tags.required {
-		return
-	}
-
-	fmt.Fprintf(g.out, "var %sSet bool\n", f.Name)
+	fmt.Fprintf(g.out, "var %sSet int\n", f.Name)
 }
 
 func (g *Generator) genRequiredFieldCheck(t reflect.Type, f reflect.StructField) {
 	jsonName := g.fieldNamer.GetJSONFieldName(t, f)
 	tags := parseFieldTags(f)
 
-	if !tags.required {
-		return
-	}
-
 	g.imports["fmt"] = "fmt"
 
-	fmt.Fprintf(g.out, "if !%sSet {\n", f.Name)
-	fmt.Fprintf(g.out, "    in.AddError(fmt.Errorf(\"key '%s' is required\"))\n", jsonName)
+	if tags.required {
+		fmt.Fprintf(g.out, "if %sSet == 0 {\n", f.Name)
+		fmt.Fprintf(g.out, "    in.AddNonFatalError(fmt.Errorf(\"key '%s' is required\"))\n", jsonName)
+		fmt.Fprintf(g.out, "}\n")
+	}
+	fmt.Fprintf(g.out, "if %sSet > 1 {\n", f.Name)
+	fmt.Fprintf(g.out, "    in.AddNonFatalError(fmt.Errorf(\"key '%s' is duplicate\"))\n", jsonName)
 	fmt.Fprintf(g.out, "}\n")
 }
 

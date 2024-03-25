@@ -1136,6 +1136,8 @@ func (r *Lexer) AddNonFatalError(e error) {
 	var le *LexerError
 	if errors.As(e, &le) {
 		le.Offset = r.start
+		le.Data = string(r.Data[r.start:r.pos])
+
 		r.addNonfatalError(le)
 		return
 	}
