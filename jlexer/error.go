@@ -13,6 +13,8 @@ type LexerError struct {
 	Key              string
 	IsUnsupportedKey bool
 	IsInvalidValue   bool
+	IsMissingKey     bool
+	IsDuplicateKey   bool
 }
 
 func (l *LexerError) Error() string {
@@ -20,11 +22,17 @@ func (l *LexerError) Error() string {
 }
 
 func (l *LexerError) VerboseError() string {
+	if l.IsMissingKey {
+		return fmt.Sprintf("'%s' is a required field", l.Key)
+	}
+	if l.IsDuplicateKey {
+		return fmt.Sprintf("'%s' is duplicated", l.Key)
+	}
 	if l.IsUnsupportedKey {
 		return fmt.Sprintf("'%s' is unsupported", l.Key)
 	}
 	if l.IsInvalidValue {
-		return fmt.Sprintf("'%s' has incorrect value", l.Key)
+		return fmt.Sprintf("'%s' has unsupported value '%s'", l.Key, l.Data)
 	}
 	return l.Error()
 }

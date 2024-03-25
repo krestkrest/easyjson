@@ -347,28 +347,22 @@ func (g *Generator) genStructFieldDecoder(t reflect.Type, f reflect.StructField)
 		return err
 	}
 
-	fmt.Fprintf(g.out, "%sSet += 1\n", f.Name)
+	fmt.Fprintf(g.out, "fieldsSet.Add(\"%s\")\n", jsonName)
 
 	return nil
-}
-
-func (g *Generator) genRequiredFieldSet(t reflect.Type, f reflect.StructField) {
-	fmt.Fprintf(g.out, "var %sSet int\n", f.Name)
 }
 
 func (g *Generator) genRequiredFieldCheck(t reflect.Type, f reflect.StructField) {
 	jsonName := g.fieldNamer.GetJSONFieldName(t, f)
 	tags := parseFieldTags(f)
 
-	g.imports["fmt"] = "fmt"
-
 	if tags.required {
-		fmt.Fprintf(g.out, "if %sSet == 0 {\n", f.Name)
-		fmt.Fprintf(g.out, "    in.AddNonFatalError(fmt.Errorf(\"key '%s' is required\"))\n", jsonName)
+		fmt.Fprintf(g.out, "if fieldsSet.GetState(\"%s\") == jlexer.FieldMissing {\n", jsonName)
+		fmt.Fprintf(g.out, "    in.AddNonFatalError(&jlexer.LexerError{Key: \"%s\", IsMissingKey: true})\n", jsonName)
 		fmt.Fprintf(g.out, "}\n")
 	}
-	fmt.Fprintf(g.out, "if %sSet > 1 {\n", f.Name)
-	fmt.Fprintf(g.out, "    in.AddNonFatalError(fmt.Errorf(\"key '%s' is duplicate\"))\n", jsonName)
+	fmt.Fprintf(g.out, "if fieldsSet.GetState(\"%s\") == jlexer.FieldDuplicate {\n", jsonName)
+	fmt.Fprintf(g.out, "    in.AddNonFatalError(&jlexer.LexerError{Key: \"%s\", IsDuplicateKey: true})\n", jsonName)
 	fmt.Fprintf(g.out, "}\n")
 }
 
@@ -499,15 +493,14 @@ func (g *Generator) genStructDecoder(t reflect.Type) error {
 		return fmt.Errorf("cannot generate decoder for %v: %v", t, err)
 	}
 
-	for _, f := range fs {
-		g.genRequiredFieldSet(t, f)
-	}
+	fmt.Fprintf(g.out, "fieldsSet := make(jlexer.FieldsTracker, %d)\n", len(fs))
 
 	fmt.Fprintln(g.out, "  in.Delim('{')")
 	fmt.Fprintln(g.out, "  for !in.IsDelim('}') {")
 	fmt.Fprintf(g.out, "    key := in.UnsafeFieldName(%v)\n", g.skipMemberNameUnescaping)
 	fmt.Fprintln(g.out, "    in.WantColon()")
 	fmt.Fprintln(g.out, "    if in.IsNull() {")
+	fmt.Fprintln(g.out, "       fieldsSet.AddNull(key)")
 	fmt.Fprintln(g.out, "       in.Skip()")
 	fmt.Fprintln(g.out, "       in.WantComma()")
 	fmt.Fprintln(g.out, "       continue")
