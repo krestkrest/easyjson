@@ -343,11 +343,14 @@ func (g *Generator) genStructFieldDecoder(t reflect.Type, f reflect.StructField)
 	}
 
 	fmt.Fprintf(g.out, "    case %q:\n", jsonName)
-	if err := g.genTypeDecoder(f.Type, "out."+f.Name, tags, 3); err != nil {
+	fmt.Fprintln(g.out, "      fieldsSet.Add(key)")
+	fmt.Fprintln(g.out, "      if fieldsSet.GetState(key) == jlexer.FieldDuplicate {")
+	fmt.Fprintln(g.out, "        in.SkipRecursive()")
+	fmt.Fprintln(g.out, "      } else {")
+	if err := g.genTypeDecoder(f.Type, "out."+f.Name, tags, 4); err != nil {
 		return err
 	}
-
-	fmt.Fprintf(g.out, "fieldsSet.Add(\"%s\")\n", jsonName)
+	fmt.Fprintln(g.out, "      }")
 
 	return nil
 }
