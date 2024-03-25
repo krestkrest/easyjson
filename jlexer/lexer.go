@@ -53,10 +53,11 @@ type Lexer struct {
 	wantSep      byte   // A comma or a colon character, which need to occur before a token.
 	lastKey      string // last key that was observed in an object
 
-	UseMultipleErrors bool          // If we want to use multiple errors.
-	VerboseErrorsMode bool          // If we want multiple errors to contain additional information.
-	fatalError        error         // Fatal error occurred during lexing. It is usually a syntax error.
-	multipleErrors    []*LexerError // Semantic errors occurred during lexing. Marshalling will be continued after finding this errors.
+	UseMultipleErrors            bool          // If we want to use multiple errors.
+	VerboseErrorsMode            bool          // If we want multiple errors to contain additional information.
+	RootObjectValidationCritical bool          // If we want to stop parsing process if the root object is invalid.
+	fatalError                   error         // Fatal error occurred during lexing. It is usually a syntax error.
+	multipleErrors               []*LexerError // Semantic errors occurred during lexing. Marshalling will be continued after finding this errors.
 }
 
 // FetchToken scans the input for the next token.
@@ -450,6 +451,18 @@ func (r *Lexer) errInvalidToken(expected string) {
 			r.token.delimValue = '}'
 			r.token.kind = TokenDelim
 		}
+		if r.RootObjectValidationCritical && r.start == 0 {
+			r.fatalError = &LexerError{
+				Reason: fmt.Sprintf("%s is expected", expected),
+				Offset: r.start,
+				Data:   string(r.Data[r.start:r.pos]),
+
+				Key:            r.lastKey,
+				IsInvalidValue: true,
+			}
+			return
+		}
+
 		r.addNonfatalError(&LexerError{
 			Reason: fmt.Sprintf("%s is expected", expected),
 			Offset: r.start,
