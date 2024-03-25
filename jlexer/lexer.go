@@ -1197,13 +1197,20 @@ func (r *Lexer) AddNonFatalError(e error) {
 func (r *Lexer) addNonfatalError(err *LexerError) {
 	if r.UseMultipleErrors {
 		// We don't want to add errors with the same offset.
-		if len(r.multipleErrors) != 0 && r.multipleErrors[len(r.multipleErrors)-1].Offset == err.Offset {
+		if r.isDuplicateError(err) {
 			return
 		}
 		r.multipleErrors = append(r.multipleErrors, err)
 		return
 	}
 	r.fatalError = err
+}
+
+func (r *Lexer) isDuplicateError(err *LexerError) bool {
+	if err.IsDuplicateKey || err.IsMissingKey || err.IsUnsupportedKey {
+		return false
+	}
+	return len(r.multipleErrors) != 0 && r.multipleErrors[len(r.multipleErrors)-1].Offset == err.Offset
 }
 
 func (r *Lexer) GetNonFatalErrors() []*LexerError {
