@@ -451,7 +451,7 @@ func (r *Lexer) errInvalidToken(expected string) {
 			r.token.kind = TokenDelim
 		}
 		r.addNonfatalError(&LexerError{
-			Reason: fmt.Sprintf("expected %s", expected),
+			Reason: fmt.Sprintf("%s is expected", expected),
 			Offset: r.start,
 			Data:   string(r.Data[r.start:r.pos]),
 
@@ -468,9 +468,12 @@ func (r *Lexer) errInvalidToken(expected string) {
 		str = string(r.token.byteValue[:maxErrorContextLen-3]) + "..."
 	}
 	r.fatalError = &LexerError{
-		Reason: fmt.Sprintf("expected %s", expected),
+		Reason: fmt.Sprintf("%s is expected", expected),
 		Offset: r.pos,
 		Data:   str,
+
+		Key:            r.lastKey,
+		IsInvalidValue: true,
 	}
 }
 
@@ -533,6 +536,14 @@ func (r *Lexer) IsString() bool {
 		r.FetchToken()
 	}
 	return r.Ok() && r.token.kind == TokenString
+}
+
+// IsBool returns true if the next token is a boolean.
+func (r *Lexer) IsBool() bool {
+	if r.token.kind == TokenUndef && r.Ok() {
+		r.FetchToken()
+	}
+	return r.Ok() && r.token.kind == TokenBool
 }
 
 // LastKey returns last traversed key in object
