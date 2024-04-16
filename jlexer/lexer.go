@@ -1181,7 +1181,9 @@ func (r *Lexer) AddNonFatalError(e error) {
 	var le *LexerError
 	if errors.As(e, &le) {
 		le.Offset = r.start
-		le.Data = string(r.Data[r.start:r.pos])
+		if le.Data == "" {
+			le.Data = string(r.Data[r.start:r.pos])
+		}
 
 		r.addNonfatalError(le)
 		return
@@ -1194,7 +1196,20 @@ func (r *Lexer) AddNonFatalError(e error) {
 	})
 }
 
+func cleanDataForVerboseErr(data string) string {
+	if data[0] == '{' && data[len(data)-1] == '}' && data != "{}" {
+		return "{...}"
+	}
+	if data[0] == '[' && data[len(data)-1] == ']' && data != "[]" {
+		return "[...]"
+	}
+	return data
+}
+
 func (r *Lexer) addNonfatalError(err *LexerError) {
+	if r.VerboseErrorsMode {
+		err.Data = cleanDataForVerboseErr(err.Data)
+	}
 	if r.UseMultipleErrors {
 		// We don't want to add errors with the same offset.
 		if r.isDuplicateError(err) {
