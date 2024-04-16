@@ -1197,6 +1197,9 @@ func (r *Lexer) AddNonFatalError(e error) {
 }
 
 func cleanDataForVerboseErr(data string) string {
+	if len(data) == 0 {
+		return data
+	}
 	if data[0] == '{' && data[len(data)-1] == '}' && data != "{}" {
 		return "{...}"
 	}
