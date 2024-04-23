@@ -15,6 +15,7 @@ type LexerError struct {
 	IsInvalidValue   bool
 	IsMissingKey     bool
 	IsDuplicateKey   bool
+	Flags            uint64
 }
 
 func (l *LexerError) Error() string {
