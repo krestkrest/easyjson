@@ -817,9 +817,13 @@ func (r *Lexer) Uint8() uint8 {
 
 	n, err := strconv.ParseUint(s, 10, 8)
 	if err != nil {
+		reason := err.Error()
+		if errors.Is(err, strconv.ErrRange) && r.VerboseErrorsMode {
+			reason = "integer in range [0, 255] is expected"
+		}
 		r.addNonfatalError(&LexerError{
 			Offset: r.start,
-			Reason: err.Error(),
+			Reason: reason,
 			Data:   s,
 		})
 	}
@@ -834,9 +838,13 @@ func (r *Lexer) Uint16() uint16 {
 
 	n, err := strconv.ParseUint(s, 10, 16)
 	if err != nil {
+		reason := err.Error()
+		if errors.Is(err, strconv.ErrRange) && r.VerboseErrorsMode {
+			reason = "integer in range [0, 65535] is expected"
+		}
 		r.addNonfatalError(&LexerError{
 			Offset: r.start,
-			Reason: err.Error(),
+			Reason: reason,
 			Data:   s,
 		})
 	}
@@ -851,9 +859,13 @@ func (r *Lexer) Uint32() uint32 {
 
 	n, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
+		reason := err.Error()
+		if errors.Is(err, strconv.ErrRange) && r.VerboseErrorsMode {
+			reason = "integer in range [0, 4294967295] is expected"
+		}
 		r.addNonfatalError(&LexerError{
 			Offset: r.start,
-			Reason: err.Error(),
+			Reason: reason,
 			Data:   s,
 		})
 	}
@@ -868,9 +880,13 @@ func (r *Lexer) Uint64() uint64 {
 
 	n, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
+		reason := err.Error()
+		if errors.Is(err, strconv.ErrRange) && r.VerboseErrorsMode {
+			reason = "integer in range [0, 18446744073709551615] is expected"
+		}
 		r.addNonfatalError(&LexerError{
 			Offset: r.start,
-			Reason: err.Error(),
+			Reason: reason,
 			Data:   s,
 		})
 	}
@@ -889,9 +905,13 @@ func (r *Lexer) Int8() int8 {
 
 	n, err := strconv.ParseInt(s, 10, 8)
 	if err != nil {
+		reason := err.Error()
+		if errors.Is(err, strconv.ErrRange) && r.VerboseErrorsMode {
+			reason = "integer in range [-128, 127] is expected"
+		}
 		r.addNonfatalError(&LexerError{
 			Offset: r.start,
-			Reason: err.Error(),
+			Reason: reason,
 			Data:   s,
 		})
 	}
@@ -906,9 +926,13 @@ func (r *Lexer) Int16() int16 {
 
 	n, err := strconv.ParseInt(s, 10, 16)
 	if err != nil {
+		reason := err.Error()
+		if errors.Is(err, strconv.ErrRange) && r.VerboseErrorsMode {
+			reason = "integer in range [-32768, 32767] is expected"
+		}
 		r.addNonfatalError(&LexerError{
 			Offset: r.start,
-			Reason: err.Error(),
+			Reason: reason,
 			Data:   s,
 		})
 	}
@@ -923,9 +947,13 @@ func (r *Lexer) Int32() int32 {
 
 	n, err := strconv.ParseInt(s, 10, 32)
 	if err != nil {
+		reason := err.Error()
+		if errors.Is(err, strconv.ErrRange) && r.VerboseErrorsMode {
+			reason = "integer in range [-2147483648, 2147483647] is expected"
+		}
 		r.addNonfatalError(&LexerError{
 			Offset: r.start,
-			Reason: err.Error(),
+			Reason: reason,
 			Data:   s,
 		})
 	}
@@ -940,9 +968,13 @@ func (r *Lexer) Int64() int64 {
 
 	n, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
+		reason := err.Error()
+		if errors.Is(err, strconv.ErrRange) && r.VerboseErrorsMode {
+			reason = "integer in range [-9223372036854775808, 9223372036854775807] is expected"
+		}
 		r.addNonfatalError(&LexerError{
 			Offset: r.start,
-			Reason: err.Error(),
+			Reason: reason,
 			Data:   s,
 		})
 	}

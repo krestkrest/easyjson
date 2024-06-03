@@ -15,6 +15,7 @@ type LexerError struct {
 	IsInvalidValue   bool
 	IsMissingKey     bool
 	IsDuplicateKey   bool
+	IsOutOfRange     bool
 	Flags            uint64
 }
 
@@ -32,7 +33,7 @@ func (l *LexerError) VerboseError() string {
 	if l.IsUnsupportedKey {
 		return fmt.Sprintf("'%s' is unsupported", l.Key)
 	}
-	if l.IsInvalidValue {
+	if l.IsInvalidValue || l.IsOutOfRange {
 		return fmt.Sprintf("'%s' has unsupported value '%s': %s", l.Key, l.Data, l.Reason)
 	}
 	return l.Error()
